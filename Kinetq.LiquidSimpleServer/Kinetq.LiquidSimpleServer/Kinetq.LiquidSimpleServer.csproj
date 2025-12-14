@@ -9,6 +9,7 @@
   <ItemGroup>
     <PackageReference Include="Fluid.Core" Version="2.31.0" />
     <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.1" />
     <PackageReference Include="Microsoft.Extensions.FileProviders.Abstractions" Version="10.0.1" />
     <PackageReference Include="Microsoft.Extensions.FileProviders.Composite" Version="10.0.1" />
     <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="10.0.1" />

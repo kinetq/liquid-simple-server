@@ -1,7 +1,5 @@
 ﻿using System.Net;
 using System.Text;
-using Fluid;
-using HtmlAgilityPack;
 using Kinetq.LiquidSimpleServer.Helpers;
 using Kinetq.LiquidSimpleServer.Interfaces;
 using Kinetq.LiquidSimpleServer.Models;
@@ -17,23 +15,17 @@ public class LiquidSimpleServer : ILiquidSimpleServer
     private readonly CancellationTokenSource _cancellationTokenSource;
 
     private readonly ILiquidRoutesManager _liquidRoutesManager;
-    private readonly IFluidParserManager _fluidParserManager;
-    private readonly ILiquidFilterManager _liquidFilterManager;
-    private readonly ILiquidRegisteredTypesManager _liquidRegisteredTypesManager;
     private readonly ILogger<LiquidSimpleServer> _logger;
+    private readonly IHtmlRenderer _htmlRenderer;
 
     public LiquidSimpleServer(
         ILiquidRoutesManager liquidRoutesManager,
-        IFluidParserManager fluidParserManager,
-        ILiquidFilterManager liquidFilterManager,
-        ILiquidRegisteredTypesManager liquidRegisteredTypesManager,
-        ILogger<LiquidSimpleServer> logger)
+        ILogger<LiquidSimpleServer> logger, 
+        IHtmlRenderer htmlRenderer)
     {
         _liquidRoutesManager = liquidRoutesManager;
-        _fluidParserManager = fluidParserManager;
-        _liquidFilterManager = liquidFilterManager;
-        _liquidRegisteredTypesManager = liquidRegisteredTypesManager;
         _logger = logger;
+        _htmlRenderer = htmlRenderer;
 
         _port = HttpHelpers.GetRandomUnusedPort();
         _listener = new HttpListener();
@@ -148,17 +140,32 @@ public class LiquidSimpleServer : ILiquidSimpleServer
         LiquidRoute? liquidRoute = _liquidRoutesManager.GetRouteForPath(path);
         if (liquidRoute?.Execute != null)
         {
-            renderModel.ViewModel = await liquidRoute.Execute(request);
+            try
+            {
+                renderModel.ViewModel = await liquidRoute.Execute(request);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error executing route logic for path {Path}", path);
+                var errorRoute = _liquidRoutesManager.GetRouteForStatusCode(HttpStatusCode.InternalServerError);
+                var errorHtmlResponse = await _htmlRenderer.RenderHtml(renderModel, errorRoute);
+                if (errorHtmlResponse != null)
+                {
+                    return (Encoding.UTF8.GetBytes(errorHtmlResponse), "text/html", 500);
+                }
+
+                return (Encoding.UTF8.GetBytes($"<h1>500 - Internal Server Error</h1><p>{ex.Message}</p>"), "text/html",
+                    500);
+            }
         }
 
         // Handle static routes
-        var htmlResponse = await RenderHtml(renderModel, liquidRoute);
+        var htmlResponse = await _htmlRenderer.RenderHtml(renderModel, liquidRoute);
         if (htmlResponse != null)
         {
             return (Encoding.UTF8.GetBytes(htmlResponse), "text/html", 200);
         }
 
-        // Handle asset requests using _localPathFactory
         try
         {
             string referer = request.Headers["Referer"];
@@ -179,65 +186,13 @@ public class LiquidSimpleServer : ILiquidSimpleServer
         }
 
         var notFoundRoute = _liquidRoutesManager.GetRouteForStatusCode(HttpStatusCode.NotFound);
-        var notFoundHtmlResponse = await RenderHtml(renderModel, notFoundRoute);
+        var notFoundHtmlResponse = await _htmlRenderer.RenderHtml(renderModel, notFoundRoute);
         if (notFoundHtmlResponse != null)
         {
             return (Encoding.UTF8.GetBytes(notFoundHtmlResponse), "text/html", 200);
         }
 
         return ("<h1>404 - Page Not Found</h1>"u8.ToArray(), "text/html", 404);
-    }
-
-    private async Task<string?> RenderHtml(RenderModel renderModel, LiquidRoute? liquidRoute)
-    {
-        if (liquidRoute == null)
-        {
-            return null;
-        }
-
-        var fileInfo = liquidRoute.FileProvider.GetFileInfo(liquidRoute.LiquidTemplatePath);
-        if (fileInfo.PhysicalPath == null)
-        {
-            return null;
-        }
-
-        string liquidTemplate = await File.ReadAllTextAsync(fileInfo.PhysicalPath);
-        var parser = _fluidParserManager.FluidParser;
-        if (parser.TryParse(liquidTemplate, out IFluidTemplate fluidTemplate, out string error))
-        {
-            var options = new TemplateOptions
-            {
-                FileProvider = liquidRoute.FileProvider
-            };
-
-            foreach (var registeredType in _liquidRegisteredTypesManager.RegisteredTypes)
-            {
-                options.MemberAccessStrategy.Register(registeredType);
-            }
-
-            foreach (var filterDelegate in _liquidFilterManager.LiquidFilters)
-            {
-                options.Filters.AddFilter(filterDelegate.Key, filterDelegate.Value);
-            }
-
-            var templateContext = new TemplateContext(renderModel, options);
-
-            string html = await fluidTemplate.RenderAsync(templateContext);
-
-            // Validate HTML using HtmlAgilityPack
-            var htmlDoc = new HtmlDocument();
-            htmlDoc.LoadHtml(html);
-
-            if (htmlDoc.ParseErrors != null && htmlDoc.ParseErrors.Any())
-            {
-                string errors = string.Join("; ", htmlDoc.ParseErrors.Select(e => e.Reason));
-                return errors;
-            }
-
-            return html;
-        }
-
-        return error;
     }
 
     private static string GetContentType(string extension)
