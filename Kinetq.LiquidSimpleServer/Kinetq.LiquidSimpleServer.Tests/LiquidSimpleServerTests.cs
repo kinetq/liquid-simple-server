@@ -1,4 +1,6 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Net;
+using System.Text.RegularExpressions;
+using Kinetq.LiquidSimpleServer.Helpers;
 using Kinetq.LiquidSimpleServer.Interfaces;
 using Kinetq.LiquidSimpleServer.Models;
 using Microsoft.Extensions.DependencyInjection;
@@ -48,7 +50,7 @@ namespace Kinetq.LiquidSimpleServer.Tests
             const string expectedRenderedHtml = "<html><body>Welcome to Home Page</body></html>";
 
             _liquidRoutesManagerMock
-                .Setup(x => x.GetRouteForPath(expectedRoute))
+                .Setup(x => x.GetRouteForPath(expectedRoute, It.IsAny<IDictionary<string, string>>()))
                 .Returns(new LiquidRoute
                 {
                     RoutePattern = new Regex("^/$"),
@@ -71,13 +73,50 @@ namespace Kinetq.LiquidSimpleServer.Tests
         }
 
         [Fact]
-        public async Task GetHomePageAsync_ShouldReturnCSS_WhenRouteExists()
+        public async Task GetNotFoundAsync_ShouldReturnRenderedHtml_WhenRouteExists()
+        {
+            // Arrange
+            const string expectedRenderedHtml = "<html><body>Not Found</body></html>";
+
+            _liquidRoutesManagerMock
+                .Setup(x => x.GetRouteForStatusCode(HttpStatusCode.NotFound))
+                .Returns(new LiquidRoute
+                {
+                    RoutePattern = new Regex("^/$"),
+                    LiquidTemplatePath = "404.liquid",
+                    FileProvider = null
+                });
+
+            _htmlRendererMock
+                .SetupSequence(x => 
+                    x.RenderHtml(It.IsAny<RenderModel>(), It.IsAny<LiquidRoute>()))
+                .ReturnsAsync((string)null) // First call returns null to simulate not found
+                .ReturnsAsync(expectedRenderedHtml);
+
+            // Act
+            using var httpClient = new HttpClient();
+            var response = await httpClient.GetAsync($"{_liquidSimpleServer.Prefix}");
+            var actualHtml = await response.Content.ReadAsStringAsync();
+
+            // Assert
+            Assert.Equal(expectedRenderedHtml, actualHtml);
+            Assert.False(response.IsSuccessStatusCode);
+        }
+
+        [Theory]
+        [InlineData("/styles/styles.css")]
+        [InlineData("/scripts/site.js")]
+        [InlineData("/assets/data.json")]
+        [InlineData("/assets/image.svg")]
+        [InlineData("/assets/image.png")]
+        [InlineData("/assets/image.jpeg")]
+        public async Task GetHomePageAsync_ShouldReturnAssetFile_WhenRouteExists(string assetPath)
         {
             // Arrange
             const string expectedRoute = "/";
 
             _liquidRoutesManagerMock
-                .Setup(x => x.GetRouteForPath(expectedRoute))
+                .Setup(x => x.GetRouteForPath(expectedRoute, It.IsAny<IDictionary<string, string>>()))
                 .Returns(new LiquidRoute
                 {
                     RoutePattern = new Regex("^/$"),
@@ -91,24 +130,18 @@ namespace Kinetq.LiquidSimpleServer.Tests
 
             // Act
             using var httpClient = new HttpClient();
-            var request = new HttpRequestMessage(HttpMethod.Get, $"{_liquidSimpleServer.Prefix}styles/styles.css");
+            var request = new HttpRequestMessage(HttpMethod.Get, $"{_liquidSimpleServer.Prefix}{assetPath.Substring(1, assetPath.Length - 1)}");
             request.Headers.Add("Referer", _liquidSimpleServer.Prefix.ToString());
             var response = await httpClient.SendAsync(request);
-            var cssContents = await response.Content.ReadAsStringAsync();
+            var assetByteArray = await response.Content.ReadAsByteArrayAsync();
 
             // Load expected CSS content from embedded file
-            var cssFileInfo = _embeddedFileProvider.GetFileInfo("styles/styles.css");
-            string expectedCssContent = string.Empty;
-            if (cssFileInfo.Exists)
-            {
-                using var stream = cssFileInfo.CreateReadStream();
-                using var reader = new StreamReader(stream);
-                expectedCssContent = await reader.ReadToEndAsync();
-            }
+            var fileInfo = _embeddedFileProvider.GetFileInfo(assetPath);
+            var fileBytes = await fileInfo.GetFileContentsBytes();
 
             // Assert
             Assert.True(response.IsSuccessStatusCode);
-            Assert.Equal(expectedCssContent, cssContents);
+            Assert.Equal(fileBytes, assetByteArray);
         }
     }
 }

@@ -1,0 +1,138 @@
+{
+  "title": "Sample Data for Liquid Template Testing",
+  "version": "1.0.0",
+  "timestamp": "2024-01-15T10:30:00Z",
+  "user": {
+    "id": 12345,
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "isActive": true,`
+    "profile": {
+      "avatar": "/images/avatars/john-doe.jpg",
+      "bio": "Software developer with 10 years of experience",
+      "location": "San Francisco, CA"
+    },
+    "preferences": {
+      "theme": "dark",
+      "notifications": true,
+      "language": "en-US"
+    }
+  },
+  "products": [
+    {
+      "id": 1,
+      "name": "Wireless Headphones",
+      "price": 299.99,
+      "currency": "USD",
+      "inStock": true,
+      "categories": ["Electronics", "Audio", "Headphones"],
+      "rating": 4.5,
+      "reviews": 127,
+      "description": "High-quality wireless headphones with noise cancellation"
+    },
+    {
+      "id": 2,
+      "name": "Bluetooth Speaker",
+      "price": 79.99,
+      "currency": "USD",
+      "inStock": false,
+      "categories": ["Electronics", "Audio", "Speakers"],
+      "rating": 4.2,
+      "reviews": 89,
+      "description": "Portable Bluetooth speaker with excellent sound quality"
+    },
+    {
+      "id": 3,
+      "name": "Smart Watch",
+      "price": 199.99,
+      "currency": "USD",
+      "inStock": true,
+      "categories": ["Electronics", "Wearables", "Smart Devices"],
+      "rating": 4.7,
+      "reviews": 203,
+      "description": "Feature-rich smart watch with health monitoring"
+    }
+  ],
+  "orders": [
+    {
+      "id": "ORD-2024-001",
+      "date": "2024-01-10T14:22:00Z",
+      "status": "shipped",
+      "total": 379.98,
+      "items": [
+        {
+          "productId": 1,
+          "quantity": 1,
+          "unitPrice": 299.99
+        },
+        {
+          "productId": 2,
+          "quantity": 1,
+          "unitPrice": 79.99
+        }
+      ],
+      "shipping": {
+        "address": {
+          "street": "123 Main Street",
+          "city": "San Francisco",
+          "state": "CA",
+          "zipCode": "94105",
+          "country": "USA"
+        },
+        "method": "express",
+        "cost": 15.99
+      }
+    }
+  ],
+  "categories": [
+    "Electronics",
+    "Audio",
+    "Headphones",
+    "Speakers",
+    "Wearables",
+    "Smart Devices"
+  ],
+  "settings": {
+    "pagination": {
+      "itemsPerPage": 10,
+      "maxPages": 100
+    },
+    "features": {
+      "enableReviews": true,
+      "enableWishlist": true,
+      "enableComparisons": false
+    },
+    "api": {
+      "version": "v2",
+      "baseUrl": "https://api.example.com",
+      "timeout": 30000
+    }
+  },
+  "statistics": {
+    "totalUsers": 15672,
+    "totalOrders": 3847,
+    "totalRevenue": 892456.78,
+    "averageOrderValue": 232.14,
+    "conversionRate": 0.0347
+  },
+  "messages": [
+    {
+      "type": "success",
+      "text": "Your order has been successfully placed!"
+    },
+    {
+      "type": "warning",
+      "text": "Some items in your cart have limited stock."
+    },
+    {
+      "type": "info",
+      "text": "New features are available in your dashboard."
+    }
+  ],
+  "metadata": {
+    "generatedAt": "2024-01-15T10:30:00Z",
+    "format": "json",
+    "encoding": "utf-8",
+    "purpose": "testing"
+  }
+}

@@ -24,6 +24,27 @@ public static class FileProviderHelpers
         return liquidTemplate;
     }
 
+    public static async Task<byte[]> GetFileContentsBytes(this IFileInfo fileInfo)
+    {
+        byte[] fileContents;
+        // Check if file is embedded (no physical path) or physical file
+        if (string.IsNullOrEmpty(fileInfo.PhysicalPath))
+        {
+            // Embedded file - use FileProvider stream
+            using var stream = fileInfo.CreateReadStream();
+            using var memoryStream = new MemoryStream();
+            await stream.CopyToAsync(memoryStream);
+            fileContents = memoryStream.ToArray();
+        }
+        else
+        {
+            // Physical file - use File.ReadAllBytesAsync
+            fileContents = await File.ReadAllBytesAsync(fileInfo.PhysicalPath);
+        }
+
+        return fileContents;
+    }
+
     public static async Task<string> GetFileContentType(this IFileInfo fileInfo)
     {
         string? contentType;
@@ -42,7 +63,7 @@ public static class FileProviderHelpers
         return contentType;
     }
 
-    public static string? GetContentType(string extension)
+    public static string? GetContentType(this string extension)
     {
         return extension.ToLowerInvariant() switch
         {

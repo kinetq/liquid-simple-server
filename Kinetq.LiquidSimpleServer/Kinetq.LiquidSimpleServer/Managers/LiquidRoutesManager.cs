@@ -2,6 +2,7 @@
 using Kinetq.LiquidSimpleServer.Models;
 using Microsoft.Extensions.Logging;
 using System.Net;
+using System.Text.RegularExpressions;
 
 namespace Kinetq.LiquidSimpleServer.Managers;
 
@@ -53,13 +54,22 @@ public class LiquidRoutesManager : ILiquidRoutesManager
         return route;
     }
 
-    public LiquidRoute? GetRouteForPath(string path)
+    public LiquidRoute? GetRouteForPath(string path, IDictionary<string, string>? queryParams = null)
     {
-        LiquidRoute liquidRoute = null;
+        LiquidRoute? liquidRoute = null;
         foreach (var route in LiquidRoutes)
         {
-            if (route.RoutePattern.IsMatch(path))
+            var match = route.RoutePattern.Match(path);
+            if (match.Success)
             {
+                if (queryParams != null)
+                {
+                    foreach (Group group in match.Groups)
+                    {
+                        queryParams[group.Name] = Uri.UnescapeDataString(group.Value);
+                    }
+                }
+
                 liquidRoute = route;
                 break;
             }

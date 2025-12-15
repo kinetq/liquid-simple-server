@@ -1,9 +1,10 @@
-﻿using System.Net;
-using System.Text;
-using Kinetq.LiquidSimpleServer.Helpers;
+﻿using Kinetq.LiquidSimpleServer.Helpers;
 using Kinetq.LiquidSimpleServer.Interfaces;
 using Kinetq.LiquidSimpleServer.Models;
 using Microsoft.Extensions.Logging;
+using System.IO;
+using System.Net;
+using System.Text;
 
 namespace Kinetq.LiquidSimpleServer;
 
@@ -20,7 +21,7 @@ public class LiquidSimpleServer : ILiquidSimpleServer
 
     public LiquidSimpleServer(
         ILiquidRoutesManager liquidRoutesManager,
-        ILogger<LiquidSimpleServer> logger, 
+        ILogger<LiquidSimpleServer> logger,
         IHtmlRenderer htmlRenderer)
     {
         _liquidRoutesManager = liquidRoutesManager;
@@ -115,29 +116,13 @@ public class LiquidSimpleServer : ILiquidSimpleServer
     private async Task<(byte[] content, string contentType, int statusCode)> HandleRequestAsync(HttpListenerRequest request)
     {
         var path = request.Url?.AbsolutePath;
-        var queryParams = new Dictionary<string, string>();
-
-        if (!string.IsNullOrEmpty(request.Url?.Query))
-        {
-            var query = request.Url.Query.TrimStart('?');
-            var pairs = query.Split('&');
-            foreach (var pair in pairs)
-            {
-                var keyValue = pair.Split('=', 2);
-                if (keyValue.Length == 2)
-                {
-                    queryParams[Uri.UnescapeDataString(keyValue[0])] = Uri.UnescapeDataString(keyValue[1]);
-                }
-            }
-        }
-
         var renderModel = new RenderModel()
         {
             Route = path,
-            QueryParams = queryParams
+            QueryParams = request.GetQueryParams()
         };
 
-        LiquidRoute? liquidRoute = _liquidRoutesManager.GetRouteForPath(path);
+        LiquidRoute? liquidRoute = _liquidRoutesManager.GetRouteForPath(path, renderModel.QueryParams);
         if (liquidRoute?.Execute != null)
         {
             try
@@ -166,30 +151,35 @@ public class LiquidSimpleServer : ILiquidSimpleServer
             return (Encoding.UTF8.GetBytes(htmlResponse), "text/html", 200);
         }
 
-        try
+        string extension = Path.GetExtension(path);
+        string assetContentType = extension.GetContentType();
+        if (!string.IsNullOrEmpty(assetContentType))
         {
-            string referer = request.Headers["Referer"];
-            Uri refererUri = new Uri(referer);
-
-            LiquidRoute? referrerLiquidRoute = _liquidRoutesManager.GetRouteForPath(refererUri.AbsolutePath);
-            var fileInfo = referrerLiquidRoute?.FileProvider.GetFileInfo(path);
-            if (fileInfo is { Exists: true })
+            try
             {
-                var fileContent = await fileInfo.GetFileContents();
-                var contentType = await fileInfo.GetFileContentType();
-                return (Encoding.UTF8.GetBytes(fileContent), contentType, 200);
+                string referer = request.Headers["Referer"];
+                Uri refererUri = new Uri(referer);
+
+                LiquidRoute? referrerLiquidRoute = _liquidRoutesManager.GetRouteForPath(refererUri.AbsolutePath);
+                var fileInfo = referrerLiquidRoute?.FileProvider.GetFileInfo(path);
+                if (fileInfo is { Exists: true })
+                {
+                    var fileContent = await fileInfo.GetFileContentsBytes();
+                    var contentType = await fileInfo.GetFileContentType();
+                    return (fileContent, contentType, 200);
+                }
             }
-        }
-        catch
-        {
-            // Fall through to 404
+            catch
+            {
+                // Fall through to 404
+            }
         }
 
         var notFoundRoute = _liquidRoutesManager.GetRouteForStatusCode(HttpStatusCode.NotFound);
         var notFoundHtmlResponse = await _htmlRenderer.RenderHtml(renderModel, notFoundRoute);
         if (notFoundHtmlResponse != null)
         {
-            return (Encoding.UTF8.GetBytes(notFoundHtmlResponse), "text/html", 200);
+            return (Encoding.UTF8.GetBytes(notFoundHtmlResponse), "text/html", 404);
         }
 
         return ("<h1>404 - Page Not Found</h1>"u8.ToArray(), "text/html", 404);

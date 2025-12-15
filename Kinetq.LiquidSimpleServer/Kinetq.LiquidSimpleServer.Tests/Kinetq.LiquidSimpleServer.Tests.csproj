@@ -8,15 +8,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Templates\NewFolder\**" />
-    <EmbeddedResource Remove="Templates\NewFolder\**" />
-    <None Remove="Templates\NewFolder\**" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Remove="Templates\404.liquid" />
     <None Remove="Templates\500.liquid" />
+    <None Remove="Templates\assets\data.json" />
     <None Remove="Templates\index.liquid" />
+    <None Remove="Templates\scripts\site.js" />
     <None Remove="Templates\styles\styles.css" />
   </ItemGroup>
 
@@ -27,6 +23,18 @@
     <EmbeddedResource Include="Templates\500.liquid">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
+    <EmbeddedResource Include="Templates\assets\data.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Templates\assets\image.jpeg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Templates\assets\image.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Templates\assets\image.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
     <EmbeddedResource Include="Templates\malformed_html.liquid">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
@@ -34,6 +42,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="Templates\index.liquid">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Templates\scripts\site.js">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="Templates\styles\styles.css">

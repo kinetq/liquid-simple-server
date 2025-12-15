@@ -10,4 +10,5 @@ public class LiquidRoute
     public string LiquidTemplatePath { get; set; }
     public IFileProvider FileProvider { get; set; }
     public Func<HttpListenerRequest, Task<object>> Execute { get; set; }
+    public IDictionary<string, string> QueryParams { get; set; } = new Dictionary<string, string>();
 }

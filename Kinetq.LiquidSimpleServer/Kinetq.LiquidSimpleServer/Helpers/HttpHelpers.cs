@@ -13,4 +13,26 @@ public static class HttpHelpers
         listener.Stop();
         return port;
     }
+
+    public static IDictionary<string, string> GetQueryParams(this HttpListenerRequest request)
+    {
+        var queryParams = new Dictionary<string, string>();
+        var queryString = request.Url.Query;
+
+        if (!string.IsNullOrEmpty(queryString))
+        {
+            var queryPairs = queryString.TrimStart('?').Split('&');
+
+            foreach (var pair in queryPairs)
+            {
+                var keyValue = pair.Split('=');
+                if (keyValue.Length == 2)
+                {
+                    queryParams[WebUtility.UrlDecode(keyValue[0])] = WebUtility.UrlDecode(keyValue[1]);
+                }
+            }
+        }
+
+        return queryParams;
+    }
 }
