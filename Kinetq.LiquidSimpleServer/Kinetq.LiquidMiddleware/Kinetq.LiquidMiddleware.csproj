@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Fluid.Core" Version="2.31.0" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Abstractions" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Composite" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Physical" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.1" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <Version>0.0.5</Version>
+    <RepositoryUrl>https://github.com/kinetq/liquid-simple-server</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <Description>This is a library used to manage and render Liquid templates in a modular way. It provides a method that can serve as middleware in any http server.</Description>
+    <Authors>Sammi Sinno</Authors>
+  </PropertyGroup>
+
+</Project>
