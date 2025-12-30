@@ -32,7 +32,7 @@ namespace Kinetq.LiquidMiddleware.Tests
                 .BuildServiceProvider();
 
             _liquidResponseMiddleware = serviceProvider.GetRequiredService<ILiquidResponseMiddleware>();
-            _embeddedFileProvider = new EmbeddedFileProvider(typeof(LiquidSimpleServerTests).Assembly, "Kinetq.LiquidSimpleServer.Tests.Templates");
+            _embeddedFileProvider = new EmbeddedFileProvider(typeof(LiquidSimpleServerTests).Assembly, "Kinetq.LiquidMiddleware.Tests.Templates");
         }
 
         public Task DisposeAsync()

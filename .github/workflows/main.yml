@@ -20,17 +20,17 @@ jobs:
         dotnet-version: '9.0.x'
           
     - name: Restore Solution
-      run: dotnet restore Kinetq.LiquidSimpleServer/Kinetq.LiquidSimpleServer.sln
+      run: dotnet restore Kinetq.LiquidMiddleware.sln
       
     - name: Build Solution
-      run: dotnet build Kinetq.LiquidSimpleServer/Kinetq.LiquidSimpleServer.sln  
+      run: dotnet build Kinetq.LiquidMiddleware.sln  
       
     - name: Test Solution
-      run: dotnet test Kinetq.LiquidSimpleServer/Kinetq.LiquidSimpleServer.sln
+      run: dotnet test Kinetq.LiquidMiddleware.sln
       
     - name: Publish Liquid Simple Server
       uses: alirezanet/publish-nuget@v3.0.0
       with:
-          PROJECT_FILE_PATH: Kinetq.LiquidSimpleServer/Kinetq.LiquidSimpleServer/Kinetq.LiquidSimpleServer.csproj
+          PROJECT_FILE_PATH: src/Kinetq.LiquidMiddleware/Kinetq.LiquidMiddleware.csproj
           NUGET_KEY: ${{secrets.NUGET_API_KEY}}
           INCLUDE_SYMBOLS: true

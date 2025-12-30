@@ -33,7 +33,7 @@ public class HtmlRendererTests : IAsyncLifetime
 
         var serviceProvider = serviceCollection.BuildServiceProvider();
         _htmlRenderer = serviceProvider.GetRequiredService<IHtmlRenderer>();
-        _embeddedFileProvider = new EmbeddedFileProvider(typeof(LiquidSimpleServerTests).Assembly, "Kinetq.LiquidSimpleServer.Tests.Templates");
+        _embeddedFileProvider = new EmbeddedFileProvider(typeof(LiquidSimpleServerTests).Assembly, "Kinetq.LiquidMiddleware.Tests.Templates");
         string executingDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Templates");
         _phyicalFileProvider = new PhysicalFileProvider(executingDirectory);
 
